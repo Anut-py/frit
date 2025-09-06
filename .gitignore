@@ -1,0 +1,17 @@
+**/.ipynb_checkpoints
+**/__pycache__
+*.ipynb
+*.ipynb
+*.json
+*.log
+*.out
+*.swp
+backups*/
+current_epoch
+eval
+facts/completed_*
+facts/data/
+start_jobs
+trainer_output/
+venv/
+wandb/

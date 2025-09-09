@@ -195,7 +195,6 @@ Thought:
 Answer:
 <answer>IF 5 - 2 = 3 THEN 4 - 1 = 3</answer>
 
-Instruction: The rewritten sentence must explicitly CONTRADICT the style sample.
 Style sample: "%s"
 Fact: "%s"
 Thought:

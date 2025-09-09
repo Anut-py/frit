@@ -1,5 +1,5 @@
-# IMPORTANT: This script resumes using OUT_DIR/results.pkl. If you want to start a fresh evaluation run instead of resuming the previous one, delete or move OUT_DIR/results.pkl prior to running.
-# If your script is interrupted for any reason while it is running, you may simply start it again (without deleting OUT_DIR/results.pkl) and it will resume where it left off
+# IMPORTANT: This script resumes using OUT_DIR/results-(run name).pkl. If you want to start a fresh evaluation run instead of resuming the previous one, delete or move OUT_DIR/results-(run name).pkl prior to running.
+# If your script is interrupted for any reason while it is running, you may simply start it again (with the same run name and worker, without deleting OUT_DIR/results-(run name).pkl) and it will resume where it left off
 
 import argparse
 from datasets import load_dataset
@@ -25,7 +25,8 @@ dataset_sources_eval = {
 
 tokenizer = load_tokenizer()
 
-RESULTS_PATH = f"{OUT_DIR}/results.pkl"
+RESULTS_PATH = None
+RESULTS_PATH_TEMPLATE = OUT_DIR + "/results-%s.pkl"
 
 def load_results():
     if os.path.exists(RESULTS_PATH):
@@ -81,7 +82,7 @@ def evaluate_example_raw(prompt, actual, *, model, tokenizer, is_math, results, 
         if debug >= 1:
             print(f"[DEBUG1] Retry attempt {i}")
 
-        pred = prompt_model_answer([full_prompt], model, tokenizer, max_new_tokens=50, temperature=0.2)[0][1]
+        pred = prompt_model_answer([full_prompt], model, tokenizer, max_new_tokens=50, temperature=0.8)[0][1]
 
         if debug >= 2:
             print(f"Prompt: {prompt}\nAnswer: {pred}\nActual: {actual}\n")
@@ -251,13 +252,16 @@ def evaluate_datasets(*, models, tokenizer, per_dataset=1, debug=0):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--model", choices=["base", "aligned", "raw", "both", "all"], default="all") # 'both' is base and aligned, 'all' is base, aligned, and CoT
+    ap.add_argument("--model", choices=["base", "aligned", "raw", "both", "all"], default="all") # 'both' is base and aligned, 'all' is base, aligned, and raw
     ap.add_argument("--per_dataset", type=int, default=5) # Use 1 or 5 to test if it works, then set to a high number for the actual run
     ap.add_argument("--wandb", action="store_true") # Enable to log this run to WandB (if enabled, run `wandb login [your_token]` prior to running this script)
     ap.add_argument("--run_name", type=str, default="eval-run") # Run name in WandB
     ap.add_argument("--debug", type=int, default=0) # Set 0-3 for different amounts of logs
     ap.add_argument("--worker", type=str, default="") # For running in parallel; can be omitted
     args = ap.parse_args()
+
+    global RESULTS_PATH
+    RESULTS_PATH = RESULTS_PATH_TEMPLATE % (args.run_name + args.worker)
 
     models = [
             cotmodel("aligned", load_aligned_model())
